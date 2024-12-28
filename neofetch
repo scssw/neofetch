@@ -60,33 +60,36 @@ print_info() {
     info "Host" model
     info "Kernel" kernel
     info "Uptime" uptime
-    info "Packages" packages
-    info "Shell" shell
-    info "Resolution" resolution
+    #info "Packages" packages
+    #info "Shell" shell
+    #info "Resolution" resolution
     info "DE" de
     info "WM" wm
     info "WM Theme" wm_theme
     info "Theme" theme
     info "Icons" icons
-    info "Terminal" term
-    info "Terminal Font" term_font
+    #info "Terminal" term
+    #info "Terminal Font" term_font
     info "CPU" cpu
     info "GPU" gpu
-    info "Memory" memory
+    info "$(color 3)Memory" memory
 
     # info "GPU Driver" gpu_driver  # Linux/macOS only
-    # info "Disk" disk
+    info "CPU Usage" cpu_usage
+    info "Disk" disk
     # info "Battery" battery
     # info "Font" font
     # info "Song" song
     # [[ "$player" ]] && prin "Music Player" "$player"
-    # info "Local IP" local_ip
-    # info "Public IP" public_ip
-    # info "Users" users
-    # info "Locale" locale  # This only works on glibc systems.
+    info "Local IP" local_ip
+    info "Public IP" public_ip
+
+    #info "Users" users
+    #info "Locale" locale  # This only works on glibc systems.
 
     info cols
 }
+
 
 # Title
 
@@ -831,7 +834,8 @@ ascii_distro="auto"
 # Example:
 # ascii_colors=(distro)      - Ascii is colored based on Distro colors.
 # ascii_colors=(4 6 1 8 8 6) - Ascii is colored using these colors.
-ascii_colors=(distro)
+ascii_colors=(6 2)
+colors=(2 0 6 2 6 7)
 
 # Bold ascii logo
 # Whether or not to bold the ascii logo.
