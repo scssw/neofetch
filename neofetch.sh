@@ -6,8 +6,10 @@ curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/ins
 # 更新 .bashrc 文件，使得每次登录时显示 neofetch
 #!/bin/bash
 
-# 定义要添加的完整内容
-FULL_BASHRC_CONTENT=$(cat <<'EOF'
+#!/bin/bash
+
+# 定义新的 .bashrc 内容
+NEW_BASHRC_CONTENT=$(cat <<'EOF'
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -107,29 +109,21 @@ fi
 #if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 #    . /etc/bash_completion
 #fi
-. "/root/.acme.sh/acme.sh.env"
+
+# 自动运行 neofetch，如果已安装
+if [ -x "$(command -v neofetch)" ]; then neofetch; fi
+
+# 加载 acme.sh 环境变量
+[ -f "/root/.acme.sh/acme.sh.env" ] && . "/root/.acme.sh/acme.sh.env"
 EOF
 )
 
-# 定义要添加的 neofetch 检查代码
-NEOFETCH_CHECK='if [ -x "$(command -v neofetch)" ]; then neofetch; fi'
-
-# 检查 .bashrc 文件是否存在
+# 写入新的 .bashrc 内容（覆盖原文件）
 BASHRC_FILE="$HOME/.bashrc"
+echo "$NEW_BASHRC_CONTENT" > "$BASHRC_FILE"
 
-if [ ! -f "$BASHRC_FILE" ]; then
-    # 如果 .bashrc 文件不存在，创建并写入完整内容
-    echo "$FULL_BASHRC_CONTENT" > "$BASHRC_FILE"
-    echo "$NEOFETCH_CHECK" >> "$BASHRC_FILE"
-else
-    # 如果 .bashrc 文件存在，检查是否已包含内容
-    if ! grep -q "$NEOFETCH_CHECK" "$BASHRC_FILE"; then
-        # 如果未包含 neofetch 检查代码，则添加
-        echo "$NEOFETCH_CHECK" >> "$BASHRC_FILE"
-    fi
-fi
+echo ".bashrc 文件已更新并覆盖。"
 
-echo ".bashrc 更新完成。"
 
 
 # 使 .bashrc 的更改生效
