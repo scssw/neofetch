@@ -9,6 +9,8 @@ curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/ins
 #!/bin/bash
 #!/bin/bash
 
+#!/bin/bash
+
 # 检查系统是否为 Debian
 if grep -qi "debian" /etc/os-release; then
     echo "检测到系统为 Debian，将覆盖 .bashrc 文件。"
@@ -127,7 +129,7 @@ EOF
 else
     echo "非 Debian 系统，仅添加 neofetch 自动运行逻辑到 .bashrc 文件。"
 
-    # 添加 neofetch 自动运行逻辑（避免重复添加）
+    # 检查是否已经包含 neofetch 逻辑
     if ! grep -Fxq 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' ~/.bashrc; then
         echo 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' >> ~/.bashrc
         echo "已添加 neofetch 自动运行逻辑到 .bashrc 文件。"
