@@ -9,7 +9,7 @@ curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/ins
 #!/bin/bash
 
 # 定义新的 .bashrc 内容
-NEW_BASHRC_CONTENT=$(cat <<'EOF'
+cat > ~/.bashrc <<'EOF'
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -116,13 +116,8 @@ if [ -x "$(command -v neofetch)" ]; then neofetch; fi
 # 加载 acme.sh 环境变量
 [ -f "/root/.acme.sh/acme.sh.env" ] && . "/root/.acme.sh/acme.sh.env"
 EOF
-)
 
-# 写入新的 .bashrc 内容（覆盖原文件）
-BASHRC_FILE="$HOME/.bashrc"
-echo "$NEW_BASHRC_CONTENT" > "$BASHRC_FILE"
-
-echo ".bashrc 文件已更新并覆盖。"
+echo ".bashrc 文件已覆盖完成。"
 
 
 
