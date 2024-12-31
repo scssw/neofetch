@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# 清理旧的 neofetch 文件
+echo "Removing old Neofetch files..."
 rm -rf /usr/local/bin/neofetch
 rm -rf /root/.config/neofetch
+
 
 # 安装 neofetch
 curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/install_neofetch.sh | bash
