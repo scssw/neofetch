@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sudo rm -f /usr/local/bin/neofetch
+sudo rm -f /root/.config/neofetch
+
 # 安装 neofetch
 curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/install_neofetch.sh | bash
 
@@ -8,6 +11,7 @@ curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/ins
 
 #!/bin/bash
 #!/bin/bash
+
 
 #!/bin/bash
 
