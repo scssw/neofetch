@@ -5,6 +5,17 @@ echo "Removing old Neofetch files..."
 rm -rf /usr/local/bin/neofetch
 rm -rf /root/.config/neofetch
 
+
+# 安装 neofetch
+curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/install_neofetch.sh | bash
+
+# 更新 .bashrc 文件，使得每次登录时显示 neofetch
+#!/bin/bash
+
+#!/bin/bash
+#!/bin/bash
+
+
 #!/bin/bash
 
 # 检查系统是否为 Debian
@@ -12,7 +23,7 @@ if grep -qi "debian" /etc/os-release; then
     echo "检测到系统为 Debian，将覆盖 .bashrc 文件。"
 
     # 定义新的 .bashrc 内容
-    cat > ~/.bashrc <<'EOF'
+    cat > ~/.bashrc <<'EOF2'
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -113,16 +124,12 @@ fi
 #    . /etc/bash_completion
 #fi
 
-# 自动运行 neofetch（兼容 noexec 环境）
-if command -v neofetch >/dev/null 2>&1; then
-    neofetch >/dev/null 2>&1 || bash /usr/local/bin/neofetch
-elif [ -f /usr/local/bin/neofetch ]; then
-    bash /usr/local/bin/neofetch
-fi
+# 自动运行 neofetch，如果已安装
+if [ -x "$(command -v neofetch)" ]; then neofetch; fi
 
 # 加载 acme.sh 环境变量
 [ -f "/root/.acme.sh/acme.sh.env" ] && . "/root/.acme.sh/acme.sh.env"
-EOF
+EOF2
 
     echo ".bashrc 文件已覆盖完成。"
 
@@ -130,39 +137,16 @@ else
     echo "非 Debian 系统，仅添加 neofetch 自动运行逻辑到 .bashrc 文件。"
 
     # 检查是否已经包含 neofetch 逻辑
-    if ! grep -Fq 'neofetch >/dev/null' ~/.bashrc; then
-        cat >> ~/.bashrc <<'EOF'
-# 自动运行 neofetch（兼容 noexec 环境）
-if command -v neofetch >/dev/null 2>&1; then
-    neofetch >/dev/null 2>&1 || bash /usr/local/bin/neofetch
-elif [ -f /usr/local/bin/neofetch ]; then
-    bash /usr/local/bin/neofetch
-fi
-EOF
+    if ! grep -Fxq 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' ~/.bashrc; then
+        echo 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' >> ~/.bashrc
         echo "已添加 neofetch 自动运行逻辑到 .bashrc 文件。"
     else
         echo "neofetch 自动运行逻辑已存在，无需重复添加。"
     fi
 fi
 
-# 确保登录 shell 也会加载 .bashrc
-if [ ! -f ~/.bash_profile ]; then
-    cat > ~/.bash_profile <<'EOF'
-# Load ~/.bashrc for login shells
-[ -f ~/.bashrc ] && . ~/.bashrc
-EOF
-elif ! grep -Fq '. ~/.bashrc' ~/.bash_profile; then
-    echo '[ -f ~/.bashrc ] && . ~/.bashrc' >> ~/.bash_profile
-fi
 
-if [ ! -f ~/.profile ]; then
-    cat > ~/.profile <<'EOF'
-# Load ~/.bashrc for login shells
-[ -f ~/.bashrc ] && . ~/.bashrc
-EOF
-elif ! grep -Fq '. ~/.bashrc' ~/.profile; then
-    echo '[ -f ~/.bashrc ] && . ~/.bashrc' >> ~/.profile
-fi
+
 
 # 使 .bashrc 的更改生效
 source ~/.bashrc
