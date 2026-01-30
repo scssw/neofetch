@@ -5,17 +5,6 @@ echo "Removing old Neofetch files..."
 rm -rf /usr/local/bin/neofetch
 rm -rf /root/.config/neofetch
 
-
-# 安装 neofetch
-curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/install_neofetch.sh | bash
-
-# 更新 .bashrc 文件，使得每次登录时显示 neofetch
-#!/bin/bash
-
-#!/bin/bash
-#!/bin/bash
-
-
 #!/bin/bash
 
 # 检查系统是否为 Debian
