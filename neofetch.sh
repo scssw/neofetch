@@ -156,8 +156,24 @@ EOF
     fi
 fi
 
+# 确保登录 shell 也会加载 .bashrc
+if [ ! -f ~/.bash_profile ]; then
+    cat > ~/.bash_profile <<'EOF'
+# Load ~/.bashrc for login shells
+[ -f ~/.bashrc ] && . ~/.bashrc
+EOF
+elif ! grep -Fq '. ~/.bashrc' ~/.bash_profile; then
+    echo '[ -f ~/.bashrc ] && . ~/.bashrc' >> ~/.bash_profile
+fi
 
-
+if [ ! -f ~/.profile ]; then
+    cat > ~/.profile <<'EOF'
+# Load ~/.bashrc for login shells
+[ -f ~/.bashrc ] && . ~/.bashrc
+EOF
+elif ! grep -Fq '. ~/.bashrc' ~/.profile; then
+    echo '[ -f ~/.bashrc ] && . ~/.bashrc' >> ~/.profile
+fi
 
 # 使 .bashrc 的更改生效
 source ~/.bashrc
