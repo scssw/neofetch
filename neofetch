@@ -82,6 +82,7 @@ print_info() {
     # info "Song" song
     # [[ "$player" ]] && prin "Music Player" "$player"
     info "Local IP" local_ip
+    info "Traffic" traffic
     #info "Public IP" public_ip
 
     #info "Users" users
@@ -3907,6 +3908,59 @@ get_local_ip() {
     esac
 }
 
+get_traffic() {
+    case $os in
+        "Linux" | "BSD" | "Solaris" | "AIX" | "IRIX")
+            local interface
+
+            if [[ "${local_ip_interface[0]}" == "auto" ]]; then
+                interface="$(ip route get 1 2>/dev/null | \
+                    awk '/dev/ {for (i=1; i<=NF; i++) if ($i=="dev") {print $(i+1); exit}}')"
+                [[ "$interface" ]] || interface="$(ip route 2>/dev/null | \
+                    awk '/default/ {print $5; exit}')"
+            else
+                interface="${local_ip_interface[0]}"
+            fi
+
+            [[ "$interface" ]] || { traffic="N/A"; return; }
+
+            if type -p vnstat >/dev/null; then
+                local line day_total month_total
+
+                line="$(LC_ALL=C vnstat -i "$interface" -d --oneline 2>/dev/null | head -n 1)"
+
+                if [[ "$line" ]]; then
+                    IFS=';' read -r _ _ _ _ _ day_total _ _ _ _ month_total _ _ _ <<< "$line"
+
+                    if [[ "$day_total" && "$month_total" ]]; then
+                        day_total="${day_total// /}"
+                        month_total="${month_total// /}"
+                        traffic="${day_total}/${month_total}"
+                        return
+                    fi
+                fi
+            fi
+
+            local rx_bytes tx_bytes line
+
+            if [[ -r "/sys/class/net/$interface/statistics/rx_bytes" ]]; then
+                read -r rx_bytes < "/sys/class/net/$interface/statistics/rx_bytes"
+                read -r tx_bytes < "/sys/class/net/$interface/statistics/tx_bytes"
+            elif [[ -r /proc/net/dev ]]; then
+                line="$(awk -v iface="$interface" '$1 == iface":" {print; exit}' /proc/net/dev)"
+                rx_bytes="$(awk '{print $2}' <<< "$line")"
+                tx_bytes="$(awk '{print $10}' <<< "$line")"
+            fi
+
+            if [[ "$rx_bytes" && "$tx_bytes" ]]; then
+                traffic="RX $(format_bytes "$rx_bytes") / TX $(format_bytes "$tx_bytes")"
+            else
+                traffic="N/A"
+            fi
+        ;;
+    esac
+}
+
 get_public_ip() {
     if [[ ! -n "$public_ip_host" ]] && type -p dig >/dev/null; then
         public_ip="$(dig +time=1 +tries=1 +short myip.opendns.com @resolver1.opendns.com)"
@@ -4647,6 +4701,18 @@ get_bold() {
         "on")  bold='\e[1m' ;;
         "off") bold="" ;;
     esac
+}
+
+format_bytes() {
+    local bytes="${1:-0}"
+
+    awk -v b="$bytes" 'BEGIN{
+        split("B KiB MiB GiB TiB PiB EiB", u, " ");
+        i=1;
+        while (b >= 1024 && i < 7) { b /= 1024; i++; }
+        if (b < 10 && i > 1) printf "%.1f%s", b, u[i];
+        else printf "%.0f%s", b, u[i];
+    }'
 }
 
 trim() {
