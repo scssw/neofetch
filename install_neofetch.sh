@@ -6,15 +6,32 @@ apt update -y
 # 安装必要的依赖
 apt install -y bash vnstat
 
-# 从当前目录安装 neofetch
+# 从当前目录安装 neofetch；若不存在则从远端拉取
 if [ ! -f "./neofetch" ]; then
-    echo "错误：当前目录未找到 ./neofetch"
-    echo "请在 neofetch 仓库目录内运行本脚本。"
-    exit 1
+    repo_raw_base="https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master"
+    tmpdir="$(mktemp -d)"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "${repo_raw_base}/neofetch" -o "${tmpdir}/neofetch"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO "${tmpdir}/neofetch" "${repo_raw_base}/neofetch"
+    else
+        echo "错误：未找到 curl 或 wget，无法下载 neofetch。"
+        exit 1
+    fi
+    if [ ! -s "${tmpdir}/neofetch" ]; then
+        echo "错误：下载 neofetch 失败。"
+        exit 1
+    fi
+    cp "${tmpdir}/neofetch" /usr/local/bin/neofetch
+else
+    # 复制 neofetch 脚本到 /usr/local/bin 目录
+    cp ./neofetch /usr/local/bin/
 fi
 
-# 复制 neofetch 脚本到 /usr/local/bin 目录
-cp ./neofetch /usr/local/bin/
+ # 复制后清理临时目录（如果创建了）
+if [ -n "${tmpdir:-}" ] && [ -d "$tmpdir" ]; then
+    rm -rf "$tmpdir"
+fi
 
 # 更新 neofetch 配置文件，确保启用 Traffic 显示
 config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/neofetch"
