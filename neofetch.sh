@@ -124,8 +124,12 @@ fi
 #    . /etc/bash_completion
 #fi
 
-# 自动运行 neofetch，如果已安装
-if [ -x "$(command -v neofetch)" ]; then neofetch; fi
+# 自动运行 neofetch（兼容 noexec 环境）
+if command -v neofetch >/dev/null 2>&1; then
+    neofetch >/dev/null 2>&1 || bash /usr/local/bin/neofetch
+elif [ -f /usr/local/bin/neofetch ]; then
+    bash /usr/local/bin/neofetch
+fi
 
 # 加载 acme.sh 环境变量
 [ -f "/root/.acme.sh/acme.sh.env" ] && . "/root/.acme.sh/acme.sh.env"
@@ -137,8 +141,15 @@ else
     echo "非 Debian 系统，仅添加 neofetch 自动运行逻辑到 .bashrc 文件。"
 
     # 检查是否已经包含 neofetch 逻辑
-    if ! grep -Fxq 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' ~/.bashrc; then
-        echo 'if [ -x "$(command -v neofetch)" ]; then neofetch; fi' >> ~/.bashrc
+    if ! grep -Fq 'neofetch >/dev/null' ~/.bashrc; then
+        cat >> ~/.bashrc <<'EOF'
+# 自动运行 neofetch（兼容 noexec 环境）
+if command -v neofetch >/dev/null 2>&1; then
+    neofetch >/dev/null 2>&1 || bash /usr/local/bin/neofetch
+elif [ -f /usr/local/bin/neofetch ]; then
+    bash /usr/local/bin/neofetch
+fi
+EOF
         echo "已添加 neofetch 自动运行逻辑到 .bashrc 文件。"
     else
         echo "neofetch 自动运行逻辑已存在，无需重复添加。"
