@@ -5,9 +5,55 @@ echo "Removing old Neofetch files..."
 rm -rf /usr/local/bin/neofetch
 rm -rf /root/.config/neofetch
 
+# 安装依赖
+apt update -y
+apt install -y bash vnstat
 
-# 安装 neofetch
-curl -sSL https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master/install_neofetch.sh | bash
+# 安装 neofetch（从仓库拉取）
+repo_raw_base="https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master"
+tmp_neofetch="$(mktemp)"
+if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "${repo_raw_base}/neofetch" -o "$tmp_neofetch"
+elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$tmp_neofetch" "${repo_raw_base}/neofetch"
+else
+    echo "错误：未找到 curl 或 wget，无法下载 neofetch。"
+    exit 1
+fi
+
+if [ ! -s "$tmp_neofetch" ]; then
+    echo "错误：下载 neofetch 失败。"
+    exit 1
+fi
+
+install -m 0755 "$tmp_neofetch" /usr/local/bin/neofetch
+rm -f "$tmp_neofetch"
+
+# 更新 neofetch 配置文件，确保启用 Traffic 显示
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/neofetch"
+config_file="${config_dir}/config.conf"
+mkdir -p "$config_dir"
+
+if [ ! -f "$config_file" ]; then
+    /usr/local/bin/neofetch --print_config > "$config_file"
+fi
+
+if ! grep -q 'info "Traffic" traffic' "$config_file"; then
+    awk '
+        { print }
+        /info "Local IP" local_ip/ && !done {
+            print "    info \"Traffic\" traffic"
+            done=1
+        }
+    ' "$config_file" > "${config_file}.tmp" && mv "${config_file}.tmp" "$config_file"
+fi
+
+# 初始化 vnstat 数据库（当前默认网卡）
+if command -v vnstat >/dev/null 2>&1 && command -v ip >/dev/null 2>&1; then
+    iface="$(ip route get 1 2>/dev/null | awk '/dev/ {for (i=1; i<=NF; i++) if ($i=="dev") {print $(i+1); exit}}')"
+    [ -n "$iface" ] || iface="$(ip route 2>/dev/null | awk '/default/ {print $5; exit}')"
+    [ -n "$iface" ] && vnstat -u -i "$iface" >/dev/null 2>&1 || true
+fi
 
 # 更新 .bashrc 文件，使得每次登录时显示 neofetch
 #!/bin/bash
@@ -123,6 +169,20 @@ fi
 #if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 #    . /etc/bash_completion
 #fi
+
+# 登录时刷新 vnstat（每小时最多一次）并显示 neofetch
+if command -v vnstat >/dev/null 2>&1 && command -v ip >/dev/null 2>&1; then
+    stamp="/tmp/vnstat_update_stamp"
+    now="$(date +%s)"
+    last=0
+    [ -f "$stamp" ] && last="$(cat "$stamp" 2>/dev/null || echo 0)"
+    if [ $((now - last)) -ge 3600 ]; then
+        iface="$(ip route get 1 2>/dev/null | awk '/dev/ {for (i=1; i<=NF; i++) if ($i=="dev") {print $(i+1); exit}}')"
+        [ -n "$iface" ] || iface="$(ip route 2>/dev/null | awk '/default/ {print $5; exit}')"
+        [ -n "$iface" ] && vnstat -u -i "$iface" >/dev/null 2>&1 || true
+        echo "$now" > "$stamp"
+    fi
+fi
 
 # 自动运行 neofetch，如果已安装
 if [ -x "$(command -v neofetch)" ]; then neofetch; fi
