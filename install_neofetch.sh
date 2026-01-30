@@ -76,7 +76,10 @@ if command -v vnstat >/dev/null 2>&1; then
         vnstat -u -i "$iface" >/dev/null 2>&1 || true
     fi
 fi
+# 使 .bashrc 的更改生效
+source ~/.bashrc
 
+echo "Neofetch has been installed and will display on login."
 # 验证安装
 echo "Neofetch has been installed successfully!"
 echo "You can now run 'neofetch' command."
