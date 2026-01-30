@@ -7,6 +7,9 @@ apt update -y
 apt install -y bash vnstat
 
 # 从当前目录安装 neofetch；若不存在则从远端拉取
+neofetch_bin="/usr/local/bin/neofetch"
+neofetch_cmd="$neofetch_bin"
+
 if [ ! -f "./neofetch" ]; then
     repo_raw_base="https://raw.githubusercontent.com/scssw/neofetch/refs/heads/master"
     tmpdir="$(mktemp -d)"
@@ -22,15 +25,20 @@ if [ ! -f "./neofetch" ]; then
         echo "错误：下载 neofetch 失败。"
         exit 1
     fi
-    cp "${tmpdir}/neofetch" /usr/local/bin/neofetch
+    install -m 0755 "${tmpdir}/neofetch" "$neofetch_bin"
 else
     # 复制 neofetch 脚本到 /usr/local/bin 目录
-    cp ./neofetch /usr/local/bin/
+    install -m 0755 ./neofetch "$neofetch_bin"
 fi
 
  # 复制后清理临时目录（如果创建了）
 if [ -n "${tmpdir:-}" ] && [ -d "$tmpdir" ]; then
     rm -rf "$tmpdir"
+fi
+
+# 如果系统挂载了 noexec，直接执行可能失败，使用 bash 调用
+if ! "$neofetch_bin" --version >/dev/null 2>&1; then
+    neofetch_cmd="bash $neofetch_bin"
 fi
 
 # 更新 neofetch 配置文件，确保启用 Traffic 显示
@@ -40,7 +48,7 @@ config_file="${config_dir}/config.conf"
 mkdir -p "$config_dir"
 
 if [ ! -f "$config_file" ]; then
-    /usr/local/bin/neofetch --print_config > "$config_file"
+    $neofetch_cmd --print_config > "$config_file"
 fi
 
 if ! grep -q 'info "Traffic" traffic' "$config_file"; then
@@ -52,9 +60,6 @@ if ! grep -q 'info "Traffic" traffic' "$config_file"; then
         }
     ' "$config_file" > "${config_file}.tmp" && mv "${config_file}.tmp" "$config_file"
 fi
-
-# 设置执行权限
-chmod +x /usr/local/bin/neofetch
 
 # 确保 vnstat 服务运行并初始化数据库（如果适用）
 if command -v vnstat >/dev/null 2>&1; then
